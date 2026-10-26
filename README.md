@@ -321,15 +321,25 @@ cd android
 
 El APK se genera con la firma de depuración que Expo configura para `release` en el proyecto generado. Es instalable manualmente, pero no está pensado para publicarse en Google Play.
 
-> En Windows, CMake/Ninja puede fallar si la ruta del proyecto contiene espacios (por ejemplo, `aplicacion web`). En ese caso, copia el proyecto completo (incluido `node_modules`) a una ruta sin espacios, como `C:\build\PokemonApi`, y compila desde ahí. Cambiar solo la letra de unidad con `subst` no basta porque Node resuelve la ruta real.
+### APK generado en este entorno
 
-Ruta esperada:
+Se compiló y verificó un **APK universal** para las cuatro arquitecturas Android:
 
 ```text
-android/app/build/outputs/apk/release/app-release.apk
+C:\Users\Administrator\Documents\aplicacion web\PokemonApi\PokemonApi-1.0.0-universal.apk
 ```
 
-> Consulta el informe final y `instrucciones.md` para saber si en este entorno se generó realmente el archivo y su ruta exacta.
+- Tamaño: **99.976.743 bytes (95,35 MiB)**.
+- SHA-256: `F48F362CE81C037D7EAED1040C62099A8F5FA04A36D4C1D0A06D6EAF87425EB6`.
+- Paquete: `com.pokemonapi.glass`, versión `1.0.0` (`versionCode` 1).
+- `minSdkVersion` 24, `targetSdkVersion` 36.
+- Arquitecturas incluidas: `arm64-v8a`, `armeabi-v7a`, `x86`, `x86_64`.
+- Firma APK v2 con el certificado de depuración de Android.
+- Verificado con `aapt dump badging`, `apksigner verify` y `zipalign -c -v 4`.
+
+La compilación se ejecutó en `C:\build\PokemonApi` (copia del proyecto sin espacios en la ruta) y el archivo final se copió a la raíz de `PokemonApi`.
+
+> En Windows, CMake/Ninja puede fallar si la ruta del proyecto contiene espacios (por ejemplo, `aplicacion web`). En ese caso, copia el proyecto completo (incluido `node_modules`) a una ruta sin espacios, como `C:\build\PokemonApi`, y compila desde ahí. Cambiar solo la letra de unidad con `subst` no basta porque Node resuelve la ruta real. Si aparece `Filename longer than 260 characters` con el Ninja 1.10.2 incluido en CMake 3.22.1, usa Ninja 1.13.2 o una ruta de proyecto más corta.
 
 ### Opción EAS Build
 
@@ -359,7 +369,7 @@ En este entorno no había EAS CLI instalado ni autenticado, por lo que se usó l
   - PokéAPI listado: HTTP 200, 1351 resultados.
   - PokéAPI detalle de Pikachu: HTTP 200, tipos y estadísticas correctos.
   - MockAPI `GET`: HTTP 200, arreglo vacío en el momento de la comprobación.
-- Compilación Android: ver informe final.
+- Compilación Android `:app:assembleRelease` con Gradle: **BUILD SUCCESSFUL**. APK universal de 95,35 MiB generado y verificado con `aapt`, `apksigner` y `zipalign` (firma APK v2, cuatro ABIs).
 
 No se crearon ni modificaron registros reales en MockAPI durante las pruebas. No se probó en un teléfono físico, instalación, apariencia real en dispositivo, almacenamiento del dispositivo ni reconexión real: esas comprobaciones quedan para la instalación manual del APK.
 
@@ -372,5 +382,5 @@ No se crearon ni modificaron registros reales en MockAPI durante las pruebas. No
 - La prevención de duplicados es local/UI; MockAPI no impone unicidad.
 - Una mutación pausada puede repetirse si el servidor la procesó y la respuesta se perdió.
 - La persistencia restaura la última copia guardada, pero no garantiza disponibilidad si expiró, se corrompió o AsyncStorage falló.
-- El APK local usa firma de depuración.
-- No se ejecutaron pruebas en dispositivo físico.
+- El APK local usa firma de depuración; es instalable para pruebas, pero no es apto para Google Play.
+- No se ejecutaron pruebas en dispositivo físico: instalación, arranque, apariencia real, permisos, almacenamiento y reconexión quedan pendientes de la prueba manual.

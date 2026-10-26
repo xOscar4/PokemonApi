@@ -79,6 +79,14 @@ npx expo-doctor     # compatibilidad de dependencias y configuración
 
 ## 4. Generar e instalar el APK
 
+> **APK ya generado y verificado:** `PokemonApi-1.0.0-universal.apk`, en la raíz de este proyecto. Es universal (`arm64-v8a`, `armeabi-v7a`, `x86`, `x86_64`), pesa **99.976.743 bytes (95,35 MiB)** y su SHA-256 es `F48F362CE81C037D7EAED1040C62099A8F5FA04A36D4C1D0A06D6EAF87425EB6`. Está firmado con el certificado de depuración (APK Signature Scheme v2), por lo que sirve para instalar y probar, no para publicar en Google Play.
+
+Para comprobar la integridad del archivo copiado:
+
+```powershell
+Get-FileHash "PokemonApi-1.0.0-universal.apk" -Algorithm SHA256
+```
+
 ### 4.1 Compilación local con Gradle
 
 La carpeta `android/` es generada (Continuous Native Generation). Si no existe, créala:
@@ -117,16 +125,22 @@ Get-Item "android\app\build\outputs\apk\release\app-release.apk" |
 
 1. Activa las **Opciones de desarrollador** y la **Depuración USB** en el teléfono.
 2. Conecta el teléfono y acepta la huella RSA.
-3. Ejecuta:
+3. Desde la **raíz del proyecto**, ejecuta:
 
 ```bash
 adb devices
+adb install -r "PokemonApi-1.0.0-universal.apk"
+```
+
+Si compilaste tú mismo, también puedes instalar la salida de Gradle:
+
+```bash
 adb install -r "android\app\build\outputs\apk\release\app-release.apk"
 ```
 
 **Opción B — Copiar el archivo:**
 
-1. Copia `app-release.apk` al teléfono (USB, Google Drive, correo, etc.).
+1. Copia `PokemonApi-1.0.0-universal.apk` al teléfono (USB, Google Drive, correo, etc.).
 2. En el teléfono, abre el archivo desde un explorador de archivos.
 3. Permite **“Instalar apps desconocidas”** para esa aplicación cuando Android lo solicite.
 4. Instala y abre **PokemonApi**.
@@ -224,6 +238,7 @@ Marca cada punto después de instalar el APK:
 | No aparece el APK | Revisa el final del log de Gradle; confirma `ANDROID_HOME` y el JDK |
 | Gradle falla por SDK faltante | Instala la plataforma/build-tools indicados en el error o ejecuta `sdkmanager` |
 | Gradle falla con `ninja: error: mkdir(...)` y la ruta del proyecto tiene espacios | Copia el proyecto completo (incluido `node_modules`) a una ruta sin espacios, por ejemplo `C:\build\PokemonApi`, y compila desde ahí. `subst` no basta porque Node resuelve la ruta real |
+| Ninja falla con `Filename longer than 260 characters` | Usa Ninja 1.13.2 o una ruta de proyecto más corta. El Ninja 1.10.2 incluido en CMake 3.22.1 no admite rutas de objetos tan largas |
 | Cambios sin conexión que no se sincronizan | Vuelve a abrir la app con red; revisa el banner de pendientes |
 | Imágenes que no cargan | Algunas URLs de sprites dependen de GitHub; la app usa un respaldo |
 
@@ -238,5 +253,7 @@ En este entorno se ejecutaron correctamente:
 - `npx expo-doctor` (20/20)
 - `npx expo export --platform all` (iOS, Android y web)
 - Consultas HTTP de solo lectura a PokéAPI (listado y detalle) y a MockAPI (`GET`).
+- `:app:assembleRelease` con Gradle: **BUILD SUCCESSFUL**, APK universal de 95,35 MiB.
+- Verificación del APK con `aapt dump badging`, `apksigner verify` y `zipalign -c -v 4`: correcta.
 
-La compilación del APK y las pruebas en teléfono físico se documentan en el informe final de la entrega. No se simularon pruebas en dispositivo.
+La **instalación y las pruebas en teléfono físico siguen pendientes** y debe realizarlas el usuario. En este entorno no había dispositivo conectado (`adb devices` vacío), así que no se simularon pruebas de instalación, arranque, apariencia, almacenamiento ni reconexión real.

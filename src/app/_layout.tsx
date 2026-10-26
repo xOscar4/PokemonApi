@@ -10,7 +10,10 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppText } from '@/components/app-text';
 import { GlassColors } from '@/constants/glass';
 import { setupConnectivity } from '@/lib/connectivity';
+import { logAppStart, logDebug } from '@/lib/debug-log';
 import { persistOptions, queryClient } from '@/lib/queryClient';
+
+logAppStart();
 
 SplashScreen.preventAutoHideAsync().catch(() => {
   // En web o si la pantalla de inicio ya se ocultó, no hay nada que hacer.
@@ -29,10 +32,16 @@ export default function RootLayout() {
       await setupConnectivity();
       await queryClient.resumePausedMutations();
     } catch (error) {
+      logDebug('MUTATION', 'Error al reanudar las mutaciones pendientes');
       console.warn('No se pudieron reanudar las mutaciones pendientes', error);
     } finally {
       finishStartup();
     }
+  }, [finishStartup]);
+
+  const restoreFailed = useCallback(() => {
+    logDebug('PERSIST', 'Error al restaurar la caché persistida');
+    finishStartup();
   }, [finishStartup]);
 
   useEffect(() => {
@@ -46,6 +55,7 @@ export default function RootLayout() {
     return onlineManager.subscribe((online) => {
       if (online) {
         queryClient.resumePausedMutations().catch((error) => {
+          logDebug('MUTATION', 'Error al reanudar las mutaciones al reconectar');
           console.warn('No se pudieron reanudar las mutaciones al reconectar', error);
         });
       }
@@ -58,7 +68,7 @@ export default function RootLayout() {
         client={queryClient}
         persistOptions={persistOptions}
         onSuccess={restoreFinished}
-        onError={finishStartup}>
+        onError={restoreFailed}>
         <ThemeProvider value={DarkTheme}>
           <StatusBar style="light" />
           <Stack

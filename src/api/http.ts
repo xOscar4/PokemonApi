@@ -12,6 +12,8 @@ type JsonRequestInit = Omit<RequestInit, 'headers'> & {
   headers?: Record<string, string>;
 };
 
+type ResponseStatusHandler = (status: number) => void;
+
 function summarizeResponseBody(body: string) {
   const clean = body.replace(/\s+/g, ' ').trim();
   if (!clean) return '';
@@ -22,7 +24,11 @@ function summarizeResponseBody(body: string) {
  * Centraliza las solicitudes para no repetir el manejo de errores HTTP,
  * errores de red y respuestas que no son JSON.
  */
-export async function requestJson<T>(url: string, init: JsonRequestInit = {}): Promise<T> {
+export async function requestJson<T>(
+  url: string,
+  init: JsonRequestInit = {},
+  onResponse?: ResponseStatusHandler
+): Promise<T> {
   let response: Response;
 
   try {
@@ -56,11 +62,21 @@ export async function requestJson<T>(url: string, init: JsonRequestInit = {}): P
     throw new HttpError('El servidor devolvió una respuesta vacía.', response.status);
   }
 
+  let parsed: T;
+
   try {
-    return JSON.parse(body) as T;
+    parsed = JSON.parse(body) as T;
   } catch {
     throw new HttpError('El servidor devolvió una respuesta que no es JSON válido.', response.status);
   }
+
+  // Se notifica únicamente cuando la respuesta HTTP y el JSON son válidos.
+  onResponse?.(response.status);
+  return parsed;
+}
+
+export function getHttpStatus(error: unknown) {
+  return error instanceof HttpError ? error.status : undefined;
 }
 
 export function getErrorMessage(error: unknown, fallback: string) {

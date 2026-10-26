@@ -20,6 +20,7 @@ import { useOnlineStatus } from '@/hooks/use-online-status';
 import { usePendingSavedPokemonChanges } from '@/hooks/use-pending-mutations';
 import { usePokemonDetail } from '@/hooks/use-pokemon';
 import { useCreateSavedPokemon, useSavedPokemons } from '@/hooks/use-saved-pokemon';
+import { logDebug } from '@/lib/debug-log';
 import {
   formatHeight,
   formatPokemonId,
@@ -65,6 +66,7 @@ export default function PokemonDetailScreen() {
 
   const savePokemon = () => {
     if (!pokemon) return;
+    logDebug('MUTATION', `Creación de registro propio solicitada (Pokémon #${pokemon.id})`);
     createMutation.reset();
     createMutation.mutate({
       pokemonId: pokemon.id,

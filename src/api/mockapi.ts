@@ -1,4 +1,5 @@
-import { HttpError, requestJson } from '@/api/http';
+import { getHttpStatus, HttpError, requestJson } from '@/api/http';
+import { logDebug } from '@/lib/debug-log';
 import type {
   CreateSavedPokemonInput,
   SavedPokemon,
@@ -72,28 +73,68 @@ export async function fetchSavedPokemonById(id: string): Promise<SavedPokemon> {
 export async function createSavedPokemon(
   input: CreateSavedPokemonInput
 ): Promise<SavedPokemon> {
-  const data = await requestJson<unknown>(getBaseUrl(), {
-    method: 'POST',
-    body: JSON.stringify({
-      pokemonId: input.pokemonId,
-      name: input.name,
-      imageUrl: input.imageUrl,
-      note: input.note,
-      isFavorite: input.isFavorite,
-    }),
-  });
+  logDebug('MOCKAPI', 'Envío de registro a MockAPI iniciado');
+  let responseStatus: number | undefined;
 
-  return parseSavedPokemon(data);
+  try {
+    const data = await requestJson<unknown>(
+      getBaseUrl(),
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          pokemonId: input.pokemonId,
+          name: input.name,
+          imageUrl: input.imageUrl,
+          note: input.note,
+          isFavorite: input.isFavorite,
+        }),
+      },
+      (status) => {
+        responseStatus = status;
+      }
+    );
+
+    const saved = parseSavedPokemon(data);
+    logDebug(
+      'MOCKAPI',
+      `Registro enviado correctamente${responseStatus ? ` (HTTP ${responseStatus})` : ''}`
+    );
+    return saved;
+  } catch (error) {
+    const status = getHttpStatus(error) ?? responseStatus;
+    logDebug('MOCKAPI', `Error al enviar el registro${status ? ` (HTTP ${status})` : ''}`);
+    throw error;
+  }
 }
 
 export async function updateSavedPokemon(
   input: UpdateSavedPokemonInput
 ): Promise<SavedPokemon> {
-  const { id, ...changes } = input;
-  const data = await requestJson<unknown>(`${getBaseUrl()}/${encodeURIComponent(id)}`, {
-    method: 'PATCH',
-    body: JSON.stringify(changes),
-  });
+  logDebug('MOCKAPI', 'Actualización de registro en MockAPI iniciada');
+  let responseStatus: number | undefined;
 
-  return parseSavedPokemon(data);
+  try {
+    const { id, ...changes } = input;
+    const data = await requestJson<unknown>(
+      `${getBaseUrl()}/${encodeURIComponent(id)}`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify(changes),
+      },
+      (status) => {
+        responseStatus = status;
+      }
+    );
+
+    const updated = parseSavedPokemon(data);
+    logDebug(
+      'MOCKAPI',
+      `Registro actualizado correctamente${responseStatus ? ` (HTTP ${responseStatus})` : ''}`
+    );
+    return updated;
+  } catch (error) {
+    const status = getHttpStatus(error) ?? responseStatus;
+    logDebug('MOCKAPI', `Error al actualizar el registro${status ? ` (HTTP ${status})` : ''}`);
+    throw error;
+  }
 }

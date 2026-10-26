@@ -2,13 +2,26 @@ import { onlineManager } from '@tanstack/react-query';
 import * as Network from 'expo-network';
 import { Platform } from 'react-native';
 
+import { describeLogError, logDebug } from '@/lib/debug-log';
+
 let setupStarted = false;
 let connectivityReady: Promise<void> = Promise.resolve();
+let lastLoggedOnline: boolean | undefined;
 
 function applyNetworkState(state: Network.NetworkState, setOnline: (online: boolean) => void) {
   // `isInternetReachable` puede ser undefined en algunas plataformas.
   // Solo se considera offline cuando el sistema lo afirma explícitamente.
   const online = state.isConnected === true && state.isInternetReachable !== false;
+
+  if (lastLoggedOnline !== online) {
+    if (lastLoggedOnline === undefined) {
+      logDebug('NETWORK', online ? 'Conexión disponible' : 'Sin conexión');
+    } else {
+      logDebug('NETWORK', online ? 'Conexión recuperada' : 'Sin conexión');
+    }
+    lastLoggedOnline = online;
+  }
+
   setOnline(online);
 }
 
@@ -36,9 +49,13 @@ export function setupConnectivity() {
       // El listener solo avisa de cambios; hace falta leer el estado inicial.
       Network.getNetworkStateAsync()
         .then((state) => applyNetworkState(state, setOnline))
-        .catch(() => {
+        .catch((error) => {
           // Si no se puede leer el estado, se mantiene el valor por defecto
           // de TanStack Query (online) y los fetch mostrarán el error real.
+          logDebug(
+            'NETWORK',
+            `No se pudo leer el estado inicial de la red: ${describeLogError(error)}`
+          );
         })
         .finally(resolve);
 
