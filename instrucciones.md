@@ -79,7 +79,7 @@ npx expo-doctor     # compatibilidad de dependencias y configuración
 
 ## 4. Generar e instalar el APK
 
-> **APK ya generado y verificado:** `PokemonApi-1.0.0-universal.apk`, en la raíz de este proyecto. Es universal (`arm64-v8a`, `armeabi-v7a`, `x86`, `x86_64`), pesa **99.976.743 bytes (95,35 MiB)** y su SHA-256 es `F48F362CE81C037D7EAED1040C62099A8F5FA04A36D4C1D0A06D6EAF87425EB6`. Está firmado con el certificado de depuración (APK Signature Scheme v2), por lo que sirve para instalar y probar, no para publicar en Google Play.
+> **APK ya generado y verificado:** `PokemonApi-1.0.0-universal.apk`, en la raíz de este proyecto. Es universal (`arm64-v8a`, `armeabi-v7a`, `x86`, `x86_64`), pesa **99.985.035 bytes (95,35 MiB)** y su SHA-256 es `22EC0DD5CD53AD9BDB9E1D8648A5A0147E15C4752D632195BC38F8B0C06883FF`. Está firmado con el certificado de depuración (APK Signature Scheme v2), por lo que sirve para instalar y probar, no para publicar en Google Play.
 
 Para comprobar la integridad del archivo copiado:
 
@@ -204,6 +204,16 @@ La app usa `onlineManager` de TanStack Query conectado a `expo-network`.
 
 > Para una prueba limpia, instala el APK, abre la app una vez con Internet, cierra sesión de red y repite los pasos.
 
+### Ver los logs de la app
+
+La app registra eventos de red, caché, persistencia y mutaciones con fecha y hora. En el APK se leen desde Logcat:
+
+```bash
+adb logcat -s ReactNativeJS
+```
+
+En desarrollo, los mismos mensajes aparecen en la terminal de Metro. Los logs son informativos y no modifican el comportamiento.
+
 ---
 
 ## 7. Lista de comprobación en dispositivo físico
@@ -256,4 +266,4 @@ En este entorno se ejecutaron correctamente:
 - `:app:assembleRelease` con Gradle: **BUILD SUCCESSFUL**, APK universal de 95,35 MiB.
 - Verificación del APK con `aapt dump badging`, `apksigner verify` y `zipalign -c -v 4`: correcta.
 
-La **instalación y las pruebas en teléfono físico siguen pendientes** y debe realizarlas el usuario. En este entorno no había dispositivo conectado (`adb devices` vacío), así que no se simularon pruebas de instalación, arranque, apariencia, almacenamiento ni reconexión real.
+La **instalación y las pruebas en teléfono físico siguen pendientes** y debe realizarlas el usuario. El entorno tenía un emulador Android conectado al cierre, pero esta entrega no se instaló ni se ejecutó en él; por tanto, no se simularon pruebas de instalación, arranque, apariencia, almacenamiento ni reconexión real. La validación del APK se hizo sobre el archivo: manifiesto, firma y alineación.

@@ -68,6 +68,7 @@ PokemonApi/
 │   ├── hooks/                       # useQuery / useMutation / pendientes
 │   ├── lib/
 │   │   ├── connectivity.ts          # expo-network + onlineManager
+│   │   ├── debug-log.ts             # Logs con fecha para desarrollo/Logcat
 │   │   └── queryClient.ts           # QueryClient, defaults y persistencia
 │   ├── types/
 │   └── utils/
@@ -267,6 +268,16 @@ Los hooks (`useCreateSavedPokemon`, `useUpdateSavedPokemon`) solo declaran la ke
 
 Al terminar la restauración, `src/app/_layout.tsx` llama a `queryClient.resumePausedMutations()`. Además, se suscribe a `onlineManager` para volver a llamar a `resumePausedMutations()` cuando regresa la conexión.
 
+### Registro de diagnóstico
+
+`src/lib/debug-log.ts` imprime eventos con fecha y categoría (`APP`, `QUERY`, `CACHE`, `NETWORK`, `MUTATION`, `MOCKAPI`, `PERSIST`). Durante el desarrollo se ven en la terminal de Metro; en el APK se pueden leer con:
+
+```bash
+adb logcat -s ReactNativeJS
+```
+
+Los logs no alteran el flujo de datos ni las mutaciones; solo registran el inicio de la app, consultas, conectividad, persistencia y reanudación.
+
 ### Limitaciones de la reanudación
 
 - Si la conexión se corta **después** de que MockAPI procesó la solicitud pero antes de recibir la respuesta, la app no puede saberlo. Al reanudar podría repetirse la operación y crear un duplicado. Por eso no se reintenta automáticamente una mutación que ya falló online: solo se reanudan las que estaban pausadas.
@@ -329,8 +340,8 @@ Se compiló y verificó un **APK universal** para las cuatro arquitecturas Andro
 C:\Users\Administrator\Documents\aplicacion web\PokemonApi\PokemonApi-1.0.0-universal.apk
 ```
 
-- Tamaño: **99.976.743 bytes (95,35 MiB)**.
-- SHA-256: `F48F362CE81C037D7EAED1040C62099A8F5FA04A36D4C1D0A06D6EAF87425EB6`.
+- Tamaño: **99.985.035 bytes (95,35 MiB)**.
+- SHA-256: `22EC0DD5CD53AD9BDB9E1D8648A5A0147E15C4752D632195BC38F8B0C06883FF`.
 - Paquete: `com.pokemonapi.glass`, versión `1.0.0` (`versionCode` 1).
 - `minSdkVersion` 24, `targetSdkVersion` 36.
 - Arquitecturas incluidas: `arm64-v8a`, `armeabi-v7a`, `x86`, `x86_64`.
@@ -368,10 +379,10 @@ En este entorno no había EAS CLI instalado ni autenticado, por lo que se usó l
 - Solicitudes HTTP de solo lectura:
   - PokéAPI listado: HTTP 200, 1351 resultados.
   - PokéAPI detalle de Pikachu: HTTP 200, tipos y estadísticas correctos.
-  - MockAPI `GET`: HTTP 200, arreglo vacío en el momento de la comprobación.
+  - MockAPI `GET`: HTTP 200 y colección accesible. En la comprobación final devolvió 2 registros de prueba; las validaciones de este agente fueron de solo lectura y no crearon ni modificaron registros.
 - Compilación Android `:app:assembleRelease` con Gradle: **BUILD SUCCESSFUL**. APK universal de 95,35 MiB generado y verificado con `aapt`, `apksigner` y `zipalign` (firma APK v2, cuatro ABIs).
 
-No se crearon ni modificaron registros reales en MockAPI durante las pruebas. No se probó en un teléfono físico, instalación, apariencia real en dispositivo, almacenamiento del dispositivo ni reconexión real: esas comprobaciones quedan para la instalación manual del APK.
+No se crearon ni modificaron registros reales en MockAPI desde las validaciones de este agente. No se probó la instalación ni el uso en un teléfono físico: arranque, apariencia real, permisos, almacenamiento y reconexión quedan para la instalación manual del APK.
 
 ---
 
